@@ -52,3 +52,13 @@ docs/_build/
 
 # PyBuilder
 target/
+
+
+# ipython profile stuff
+
+db
+log
+pid
+security
+history.sqlite
+profile_default
