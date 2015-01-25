@@ -9,3 +9,10 @@ with a prefix, e.g.::
     00-first.py
     50-middle.py
     99-last.ipy
+
+For ophyd we use the follwoing:
+
+00 : Setup
+10 : Motors
+20 : Detectors
+50 : Scans
