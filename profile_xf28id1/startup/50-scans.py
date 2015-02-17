@@ -2,9 +2,8 @@ from ophyd.userapi.scan_api import Scan, AScan, DScan, Count
 
 scan = Scan()
 ascan = AScan()
-#ascan.default_triggers = [sclr_trig]
-#ascan.default_detectors = [sclr_ch1, sclr_ch2, sclr_ch3, sclr_ch4, sclr_ch5,
-#                           sclr_ch6]
+ascan.default_triggers = [em_cnt]
+ascan.default_detectors = [em_ch1, em_ch2, em_ch3, em_ch4]
 dscan = DScan()
 
 # Use ct as a count which is a single scan.
