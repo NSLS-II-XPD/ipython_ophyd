@@ -3,12 +3,16 @@
 # TODO: some error checking to make sure detector is connected
 # and property initialized
 
+import time
+
 class PESeries(object):
     """Execute a series of PE scans with optional background scans.
 
     """
 
     WAIT_TIME = 0.01
+    SHUTTER_OPEN = True
+    SHUTTER_CLOSED = False
 
     def __init__(self, detector, shutter):
         self.detector = detector
@@ -57,26 +61,42 @@ class PESeries(object):
         return
 
 
+    def detectorBusy(self):
+        rv = self.detector.detector_state.value == 1 \
+                and self.detector.acquire.value == 1
+        return rv
+
+
+    def acquireImage(self):
+        # TODO: replace sleep with check that detector is ready
+        time.sleep(1.0)
+        self.detector.acquire.put(1)
+        while self.detectorBusy():
+            time.sleep(self.WAIT_TIME)
+        return
+
+
+    def acquireDark(self):
+        self.shutter.closeShutter()
+        assert self.shutter.shutterStatus is self.SHUTTER_CLOSED
+        self.acquireImage()
+        return
+
+
+    def acquireLight(self):
+        self.shutter.openShutter()
+        assert self.shutter.shutterStatus is self.SHUTTER_OPEN
+        self.acquireImage()
+        return
+
+
     def single(self, filename, exposuretime, repeats):
-        import time
         self.exposuretime = exposuretime
         darkfile = ''.join([filename, '_dark'])
         for r in range(repeats):
             # take dark current
-            self.shutter.closeShutter()
-            if not self.shutter.shutterStatus:
-                time.sleep(1.0)
-                self.detector.tiff1.file_name.put(darkfile)
-                self.detector.acquire.put(1)
-                while (self.detector.detector_state.value == 1 \
-                        and self.detector.acquire.value == 1):
-                    time.sleep(self.WAIT_TIME)
-            self.shutter.openShutter()
-            if self.shutter.shutterStatus:
-                time.sleep(1.0)
-                self.detector.tiff1.file_name.put(filename)
-                self.detector.acquire.put(1)
-                while (self.detector.detector_state.value == 1 \
-                        and self.detector.acquire.value == 1):
-                    time.sleep(self.WAIT_TIME)
+            self.detector.tiff1.file_name.put(darkfile)
+            self.acquireDark()
+            self.detector.tiff1.file_name.put(filename)
+            self.acquireLight()
         return
