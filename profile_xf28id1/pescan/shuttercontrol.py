@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import time
+from utils import getEpicsPV
 from ophyd.controls import EpicsSignal
 
 class Shutter(object):
@@ -59,8 +60,4 @@ class Shutter(object):
 
 
 
-# Helper functions for generating Epics PVs
-def getEpicsPV(basename, suffix):
-    rv = ''.join([basename, suffix])
-    return rv
 
