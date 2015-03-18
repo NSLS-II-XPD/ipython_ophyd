@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import time
-from utils import getEpicsPV
+from pescan.utils import getEpicsPV
 from ophyd.controls import EpicsSignal
 
 class Shutter(object):
@@ -55,9 +55,3 @@ class Shutter(object):
     def shutterStatus(self):
         rv = bool(not self._openstatus.value) and bool(self._closestatus.value)
         return rv
-
-
-
-
-
-

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from utils import getEpicsSignal
+from pescan.utils import getEpicsSignal
 
 
 class TemperatureController(object):
@@ -39,4 +39,3 @@ class TemperatureController(object):
     def ramprate(self, value):
         self._ramprate.put(value)
         return
-
