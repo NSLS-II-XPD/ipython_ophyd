@@ -62,3 +62,6 @@ pid
 security
 history.sqlite
 profile_default
+
+#vim
+*.swp
