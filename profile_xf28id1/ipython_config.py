@@ -36,7 +36,7 @@ c = get_config()
 
 # Pre-load matplotlib and numpy for interactive use, selecting a particular
 # matplotlib backend and loop integration.
-#c.InteractiveShellApp.pylab = 'auto'
+c.InteractiveShellApp.pylab = 'auto'
 
 # Configure matplotlib for interactive use with the default matplotlib backend.
 # c.InteractiveShellApp.matplotlib = None
@@ -46,6 +46,7 @@ c = get_config()
 #
 # When False, pylab mode should not import any names into the user namespace.
 # c.InteractiveShellApp.pylab_import_all = True
+c.InteractiveShellApp.pylab_import_all = False
 
 c.StoreMagics.autorestore = True
 
@@ -82,7 +83,7 @@ c.InteractiveShellApp.extensions = ['ophyd.session',
 
 # Pre-load matplotlib and numpy for interactive use, selecting a particular
 # matplotlib backend and loop integration.
-c.TerminalIPythonApp.pylab = 'auto'
+#c.TerminalIPythonApp.pylab = 'auto'
 
 # Create a massive crash report when IPython encounters what may be an internal
 # error.  The default is to append a short message to the usual traceback
@@ -533,3 +534,6 @@ c.TerminalInteractiveShell.autocall = 2
 # If True, any %store-d variables will be automatically restored when IPython
 # starts.
 # c.StoreMagics.autorestore = False
+
+# silence egg-import related complains
+import pkg_resources
