@@ -35,8 +35,31 @@ class TiffSaver(object):
         return
 
 
-    def saveScans(self, sids, basename=None):
-        scanlist = self._expandScanIDs(sids)
+    def listtiffs(self, count=None):
+        """List the last count tiff files in the output directory.
+        """
+        print("#", self.outputdir)
+        tt = self.timetiffs
+        tms = tt.keys()
+        if count:  tms = tms[-count:]
+        for ti in tms:
+            tmiso = datetime.datetime.fromtimestamp(round(ti)).isoformat()
+            print(tmiso, os.path.basename(tt[ti]), sep='    ')
+        return
+
+
+    def saveScans(self, scanspec, basename=None):
+        """Save the specified scans to the outputdir
+
+        scanspec -- can be an integer index an array of indices or a slice
+                    object like numpy.s_[_5:].  This looks up entries with
+                    corresponding scan_id in the data broker.
+        basename -- optional basename to be used for exporting these scans.
+                    If not specified, use self.basename.
+
+        No return value.
+        """
+        scanlist = self._expandScanSpecs(sids)
         stash_basename = self.basename
         if basename is not None:
             self.basename = basename
@@ -63,6 +86,9 @@ class TiffSaver(object):
         header = db[sid]
         events = db.fetch_events(header)
         if not events:  return
+        savedscan = self.findSavedScan(sid=header.scan_id)
+        if savedscan:
+            os.remove(savedscan)
         ev, = events
         dd = ev.data
         nlight = [k for k in dd if k.endswith('image_lightfield')]
@@ -78,25 +104,30 @@ class TiffSaver(object):
         if 3 == Adark.ndim:
             Adark = Adark.mean(axis=0)
         A = Alight - framecount * Adark
-        fmt = '{self.outputdir}/{self.basename}-{sid:05d}.tiff'
-        fname = fmt.format(self=self, sid=header.scan_id)
+        fname = self._getOutputFilename(sid=header.scan_id)
         tifffile.imsave(fname, A)
         stinfo = os.stat(fname)
         os.utime(fname, (stinfo.st_atime, header.stop_time))
         return
 
 
-    def isAlreadySaved(self, sid):
-        """True if the specified scan_id was already saved in outputdir.
+    def findSavedScan(self, sid):
+        """Return full path to a saved tiff file for the specified scan.
+
+        sid  -- integer scan_id identifier
+
+        Return string or None if the scan has not been saved yet.
         """
         import bisect
         header = self.databroker[sid]
         stop_time = header.stop_time
-        tifftimes = self.timetiffs.keys()
-        idx = bisect.bisect(tifftimes, stop_time)
-        deltas = [abs(stop_time - ti) for ti in tifftimes[idx-1:idx+1]]
-        rv = deltas and min(deltas) < self._mtime_window
-        return bool(rv)
+        tt = self.timetiffs
+        tms = tt.keys()
+        idx = bisect.bisect(tms, stop_time)
+        for ti in tms[idx-1:idx+1]:
+            if abs(stop_time - ti) < self._mtime_window:
+                return tt[tms]
+        return None
 
     # Properties -------------------------------------------------------------
 
@@ -154,5 +185,28 @@ class TiffSaver(object):
         self._timetiffs = OrderedDict(tt)
         self._output_mtime = os.path.getmtime(self.outputdir)
         return self.timetiffs
+
+    # Helpers ----------------------------------------------------------------
+
+    def _getOutputFilename(self, sid):
+        fmt = '{self.outputdir}/{self.basename}-{sid:05d}.tiff'
+        fname = fmt.format(self=self, sid=sid)
+        return fname
+
+
+    def _expandScanSpecs(self, scanspec):
+        """Convert scan specification to a list of scan ids.
+
+        scanspec -- can be an integer index an array of indices
+                    or a slice object like numpy.s_[_5:].
+
+        Return a list of integers.
+        """
+        lastsid = self.databroker[-1].scan_id
+        allscanids = numpy.arange(lastsid + 1)
+        if isinstance(scanspec, int):
+            return [allscanids[scanspec]]
+        rv = allscanids[scanspec].tolist()
+        return rv
 
 # class TiffSaver
