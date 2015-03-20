@@ -59,7 +59,7 @@ class TiffSaver(object):
 
         No return value.
         """
-        scanlist = self._expandScanSpecs(sids)
+        scanlist = self._expandScanSpecs(scanspec)
         stash_basename = self.basename
         if basename is not None:
             self.basename = basename
@@ -126,7 +126,7 @@ class TiffSaver(object):
         idx = bisect.bisect(tms, stop_time)
         for ti in tms[idx-1:idx+1]:
             if abs(stop_time - ti) < self._mtime_window:
-                return tt[tms]
+                return tt[ti]
         return None
 
     # Properties -------------------------------------------------------------
