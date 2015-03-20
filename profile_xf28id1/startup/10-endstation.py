@@ -23,7 +23,8 @@ tth = EpicsMotor('XF:28IDC-ES:1{Dif-Ax:2ThI}Mtr', name='tth')
 
 cs700 = PVPositioner('XF:28IDC-ES:1{Env:01}T-SP',
                      readback='XF:28IDC-ES:1{Env:01}T-I',
+                     done='XF:28IDC-ES:1{Env:01}Cmd-Busy', done_val=0,
                      stop='XF:28IDC-ES:1{Env:01}Cmd-Cmd', stop_val=13,
-                     put_complete=True)
+                     put_complete=True, name='cs700')
 
 nullmtr = NullPositioner(name='nullmtr')
