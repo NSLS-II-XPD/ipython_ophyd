@@ -50,7 +50,7 @@ class TiffSaver(object):
 
     def saveNewScans(self):
         "Export scan data that were not yet saved to outputdir."
-        lasttime = max([self.start_time] + self.timetiff.keys())
+        lasttime = max([self.start_time] + self.timetiffs.keys())
         db = self.databroker
         headers = db.find_events(start_time=lasttime)
         for header in headers:
@@ -68,7 +68,7 @@ class TiffSaver(object):
         nlight = [k for k in dd if k.endswith('image_lightfield')]
         ndark = [k for k in dd if k.endswith('image_darkfield')]
         Alight = dd[nlight[0]][0]
-        Adark = numpy.zeros(1, 1)
+        Adark = numpy.zeros((1, 1))
         if ndark and dd[ndark[0]][0].size:
             Adark = dd[ndark[0]][0]
         framecount = 1
@@ -92,7 +92,7 @@ class TiffSaver(object):
         import bisect
         header = self.databroker[sid]
         stop_time = header.stop_time
-        tifftimes = self.timetiff.keys()
+        tifftimes = self.timetiffs.keys()
         idx = bisect.bisect(tifftimes, stop_time)
         deltas = [abs(stop_time - ti) for ti in tifftimes[idx-1:idx+1]]
         rv = deltas and min(deltas) < self._mtime_window
@@ -146,7 +146,8 @@ class TiffSaver(object):
         from collections import OrderedDict
         if os.path.getmtime(self.outputdir) == self._output_mtime:
             return self._timetiffs
-        allfiles = os.listdir(self.outputdir)
+        allfiles = [os.path.join(self.outputdir, f)
+                for f in os.listdir(self.outputdir)]
         alltiffs = [f for f in allfiles
                 if f.endswith('.tiff') and os.path.isfile(f)]
         tt = sorted((os.path.getmtime(f), f) for f in alltiffs)
