@@ -92,18 +92,10 @@ class TiffSaver(object):
         ev, = events
         dd = ev.data
         nlight = [k for k in dd if k.endswith('image_lightfield')]
-        ndark = [k for k in dd if k.endswith('image_darkfield')]
         Alight = dd[nlight[0]][0]
-        Adark = numpy.zeros((1, 1))
-        if ndark and dd[ndark[0]][0].size:
-            Adark = dd[ndark[0]][0]
-        framecount = 1
         if 3 == Alight.ndim:
-            framecount = Alight.shape[0]
             Alight = Alight.sum(axis=0)
-        if 3 == Adark.ndim:
-            Adark = Adark.mean(axis=0)
-        A = Alight - framecount * Adark
+        A = Alight
         fname = self._getOutputFilename(sid=header.scan_id)
         tifffile.imsave(fname, A)
         stinfo = os.stat(fname)
