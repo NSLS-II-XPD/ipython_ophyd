@@ -10,6 +10,7 @@ import tifffile
 import numpy
 
 
+
 class TiffSaver(object):
 
     _outputdir = '/tmp'
@@ -18,7 +19,7 @@ class TiffSaver(object):
 
     start_time = datetime.datetime(2015, 03, 19)
     start_time = time.mktime(start_time.timetuple())
-    _mtime_window = 1
+    _mtime_window = 0.05
     _output_mtime = 0
     _timetiffs = None
 
@@ -59,13 +60,13 @@ class TiffSaver(object):
 
         No return value.
         """
-        scanlist = self._expandScanSpecs(scanspec)
+        headers = self.findHeaders(scanspec)
         stash_basename = self.basename
         if basename is not None:
             self.basename = basename
         try:
-            for sid in scanlist:
-                self.writeScan(sid)
+            for h in headers:
+                self.writeHeader(h)
         finally:
             self.basename = stash_basename
         return
@@ -77,49 +78,80 @@ class TiffSaver(object):
         db = self.databroker
         headers = db.find_events(start_time=lasttime)
         for header in headers:
-            self.writeScan(header.scan_id)
+            self.writeHeader(header)
         return
 
 
-    def writeScan(self, sid):
-        db = self.databroker
-        header = db[sid]
-        events = db.fetch_events(header)
-        if not events:  return
-        savedscan = self.findSavedScan(sid=header.scan_id)
-        if savedscan:
-            os.remove(savedscan)
-        ev, = events
-        dd = ev.data
+    def writeHeader(self, header, overwrite=False):
+        from uiophyd.brokerutils import blank_events
+        events = blank_events(header)
+        for n, e in enumerate(events):
+            fname = self._getOutputFilename(header=header, event=e, index=n)
+            self.writeEvent(fname, e, overwrite=overwrite)
+        return
+
+
+    def writeEvent(self, filename, event, overwrite):
+        from uiophyd.brokerutils import fill_event
+        savedfile = self.findSavedEvent(event)
+        if savedfile:
+            if overwrite:
+                os.remove(savedfile)
+            else:
+                return
+        dd = event.data
         nlight = [k for k in dd if k.endswith('image_lightfield')]
         Alight = dd[nlight[0]][0]
+        if isinstance(Alight, basestring):
+            fill_event(event)
+            Alight = event.data[nlight[0]][0]
         if 3 == Alight.ndim:
             Alight = Alight.sum(axis=0)
+        if 0 == Alight.size:
+            return
         A = Alight
-        fname = self._getOutputFilename(sid=header.scan_id)
-        tifffile.imsave(fname, A)
-        stinfo = os.stat(fname)
-        os.utime(fname, (stinfo.st_atime, header.stop_time))
+        tifffile.imsave(filename, A)
+        stinfo = os.stat(filename)
+        os.utime(filename, (stinfo.st_atime, event.time))
         return
 
 
-    def findSavedScan(self, sid):
-        """Return full path to a saved tiff file for the specified scan.
+    def findSavedEvent(self, e):
+        """Return full path to a saved tiff file for the specified scan event.
 
-        sid  -- integer scan_id identifier
+        e    -- event document object.
 
-        Return string or None if the scan has not been saved yet.
+        Return string or None if the event has not been saved
         """
         import bisect
-        header = self.databroker[sid]
-        stop_time = header.stop_time
         tt = self.timetiffs
         tms = tt.keys()
-        idx = bisect.bisect(tms, stop_time)
+        idx = bisect.bisect(tms, e.time)
         for ti in tms[idx-1:idx+1]:
-            if abs(stop_time - ti) < self._mtime_window:
+            if abs(e.time - ti) < self._mtime_window:
                 return tt[ti]
         return None
+
+
+    def findHeaders(self, scanspec):
+        """Produce header objects corresponding to scan specification.
+
+        scanspec -- can be an integer index an array of indices,
+                    slice object like numpy.s_[_5:] or string uid.
+
+        Return a list of header objects.
+        """
+        db = self.databroker
+        rv = []
+        if isinstance(scanspec, int):
+            rv.append(db[scanspec])
+        elif isinstance(scanspec, slice):
+            rv += db[scanspec]
+        elif isinstance(scanspec, basestring):
+            rv += db.find_headers(uid=scanspec)
+        else:
+            rv += map(self.findHeaders, scanspec)
+        return rv
 
     # Properties -------------------------------------------------------------
 
@@ -180,25 +212,15 @@ class TiffSaver(object):
 
     # Helpers ----------------------------------------------------------------
 
-    def _getOutputFilename(self, sid):
-        fmt = '{self.outputdir}/{self.basename}-{sid:05d}.tiff'
-        fname = fmt.format(self=self, sid=sid)
+    def _getOutputFilename(self, header, event, index):
+        scan_id = header.scan_id
+        dd = event.data
+        suffix = "{:05d}-{:03d}".format(scan_id, index)
+        if 'cs700' in dd:
+            tk = dd['cs700'][0]
+            suffix = "T{:03.1f}-{}".format(tk, suffix)
+        fmt = '{self.outputdir}/{self.basename}-{suffix}.tiff'
+        fname = fmt.format(self=self, suffix=suffix)
         return fname
-
-
-    def _expandScanSpecs(self, scanspec):
-        """Convert scan specification to a list of scan ids.
-
-        scanspec -- can be an integer index an array of indices
-                    or a slice object like numpy.s_[_5:].
-
-        Return a list of integers.
-        """
-        lastsid = self.databroker[-1].scan_id
-        allscanids = numpy.arange(lastsid + 1)
-        if isinstance(scanspec, int):
-            return [allscanids[scanspec]]
-        rv = allscanids[scanspec].tolist()
-        return rv
 
 # class TiffSaver
