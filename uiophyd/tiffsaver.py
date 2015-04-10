@@ -78,7 +78,7 @@ class TiffSaver(object):
         db = self.databroker
         headers = db.find_events(start_time=lasttime)
         for header in headers:
-            self.writeHeader(header)
+            self.writeHeader(header, overwrite=False)
         return
 
 
@@ -110,7 +110,7 @@ class TiffSaver(object):
         if 0 == Alight.size:
             return
         A = Alight
-        tifffile.imsave(filename, A)
+        tifffile.imsave(filename, A.astype(numpy.float32))
         stinfo = os.stat(filename)
         os.utime(filename, (stinfo.st_atime, event.time))
         return
@@ -218,7 +218,7 @@ class TiffSaver(object):
         suffix = "{:05d}-{:03d}".format(scan_id, index)
         if 'cs700' in dd:
             tk = dd['cs700'][0]
-            suffix = "T{:03.1f}-{}".format(tk, suffix)
+            suffix = "{}-T{:03.1f}".format(suffix, tk)
         fmt = '{self.outputdir}/{self.basename}-{suffix}.tiff'
         fname = fmt.format(self=self, suffix=suffix)
         return fname

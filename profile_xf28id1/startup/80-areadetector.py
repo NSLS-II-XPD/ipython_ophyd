@@ -6,7 +6,7 @@ shctl2 = EpicsSignal('XF:28IDC-ES:1{Det:PE2}cam1:ShutterMode', name='shctl2')
 
 pe1 = AreaDetectorFileStoreTIFF('XF:28IDC-ES:1{Det:PE1}', name='pe1',
                                 stats=[],
-                                ioc_file_path = 'X:/pe1_data',
+                                ioc_file_path = 'G:/pe1_data',
                                 file_path = '/home/xf28id1/pe1_data',
                                 shutter=shctl1,
                                 shutter_val=(1,0))

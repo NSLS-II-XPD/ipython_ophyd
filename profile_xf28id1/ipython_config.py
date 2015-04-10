@@ -1,5 +1,7 @@
 # Configuration file for ipython.
 
+import dataportal  # make sure that enaml is imported before mpl
+del dataportal
 c = get_config()
 
 #------------------------------------------------------------------------------
