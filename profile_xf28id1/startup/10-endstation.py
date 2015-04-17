@@ -45,7 +45,7 @@ TWO_THETA_DIODE_OUT = 60.0
 X_HOME = 11.0
 Y_HOME = 41.0
 
-gs = XPDGasSwitcher(requested_pos='XF:28IDC-ES:1{Env:02}Pos-SP',
+gas = XPDGasSwitcher(requested_pos='XF:28IDC-ES:1{Env:02}Pos-SP',
         current_pos='XF:28IDC-ES:1{Env:02}Pos-I',
         gasdict = {1: 'O2', 2: 'N2', 3: 'He'})
 

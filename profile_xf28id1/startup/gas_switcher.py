@@ -1,4 +1,5 @@
 from __future__ import print_function
+import six
 
 import logging
 
@@ -22,8 +23,10 @@ class GasSwitcher(SignalGroup):
 class XPDGasSwitcher(GasSwitcher):
     def __init__(self, requested_pos=None, current_pos=None, gasdict = {}):
        GasSwitcher.__init__(self)
-       signals = [EpicsSignal(current_pos, rw=False, alias='_current_pos'),
-                  EpicsSignal(requested_pos, alias='_requested_pos'),
+       signals = [EpicsSignal(current_pos, rw=False, alias='_current_pos',
+                              name='current_gas'),
+                  EpicsSignal(requested_pos, alias='_requested_pos',
+                              name='requested_gas'),
                   ] 
        self._gasdict = gasdict
        for sig in signals:
@@ -35,6 +38,13 @@ class XPDGasSwitcher(GasSwitcher):
     def current_pos(self):
         return self._current_pos.value
 
+    @property
+    def current_gas(self):
+        return self._gasdict[self.current_pos]
+
+    @property
+    def requested_gas(self):
+        return self._gasdict[self.requested_pos]
 
     @property
     def requested_pos(self):
@@ -79,5 +89,9 @@ class XPDGasSwitcher(GasSwitcher):
         print('Current gas is:')
         print(self._gasdict[self.current_pos])
         return
+
+    @property
+    def lookup(self):
+        return {str(k): v for k, v in six.iteritems(self._gasdict)}
 
 
