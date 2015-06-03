@@ -3,24 +3,46 @@ from ophyd.controls.positioner import MoveStatus,Positioner
 from ophyd.controls.signal import EpicsSignal
 from robot import RobotPositioner
 from gas_switcher import XPDGasSwitcher
+import time as ttime
 
 
-class NullPositioner(Positioner):
+class NullStatus(object):
+    def __init__(self):
+        self.done = True
+
+
+class NullPositioner(object):
 
     def __init__(self, name=None):
-        Positioner.__init__(self)
-        self._egu = 'a.u.'
-        self._position = 0
+        self.name = name
+        self.pvname = ['pain']
+        self.report = {'pv': 'pain'}
 
-    def move(self, position, wait=False,
-              moved_cb=None, timeout=30.0):
+        self.position = 0
 
-        self._position = position
-        status = MoveStatus(self, position, done=True)
-        self.subscribe(status._finished,
-                       event_type=self._SUB_REQ_DONE, run=True)
+    def move_next(self, *args, **kwargs):
+        next(self.traj_iter)
+        st = NullStatus()
+        print(st.done)
+        st.done = True
+        return None, st
 
-        return status
+    @property
+    def timestamp(self):
+        return [ttime.time()]
+
+    def set_trajectory(self, traj):
+        self.traj = traj
+        self.traj_iter = iter(traj)
+
+    def check_value(self, *args, **kwargs):
+        return True
+
+    def describe(self):
+        return {'pain': {'source': 'pain', 'dtype': 'number'}}
+
+    def read(self):
+        return {'pain': {'value': 99999999, 'timestamp': ttime.time()}}
 
 
 robot_sample_number = EpicsSignal('XF:28IDC-ES:1{SM}ID:Tgt-SP', 
