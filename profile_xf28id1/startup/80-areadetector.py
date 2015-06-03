@@ -5,7 +5,6 @@ from ophyd.controls.area_detector import (AreaDetectorFileStoreHDF5,
 from shutter import sh1
 
 shctl1 = EpicsSignal('XF:28IDC-ES:1{Det:PE1}cam1:ShutterMode', name='shctl1')
-shctl2 = EpicsSignal('XF:28IDC-ES:1{Det:PE2}cam1:ShutterMode', name='shctl2')
 
 pe1 = AreaDetectorFileStoreTIFFSquashing('XF:28IDC-ES:1{Det:PE1}', name='pe1',
                                 stats=[],
@@ -15,10 +14,12 @@ pe1 = AreaDetectorFileStoreTIFFSquashing('XF:28IDC-ES:1{Det:PE1}', name='pe1',
                                 shutter_val=(1,0))
 
 
-pe2 = AreaDetectorFileStoreTIFFSquashing('XF:28IDC-ES:1{Det:PE2}', name='pe2',
-                                stats=[],
-                                ioc_file_path = 'Z:/pe2_data',
-                                file_path = '/home/xf28id1/pe2_data',
-                                shutter=shctl2,
-                                shutter_val=(1,0))
+# Dan and Sanjit commented this out in June.
+# shctl2 = EpicsSignal('XF:28IDC-ES:1{Det:PE2}cam1:ShutterMode', name='shctl2')
+#pe2 = AreaDetectorFileStoreTIFFSquashing('XF:28IDC-ES:1{Det:PE2}', name='pe2',
+#                                stats=[],
+#                                ioc_file_path = 'Z:/pe2_data',
+#                                file_path = '/home/xf28id1/pe2_data',
+#                                shutter=shctl2,
+#                                shutter_val=(1,0))
 
