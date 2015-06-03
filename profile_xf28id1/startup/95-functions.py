@@ -1,3 +1,4 @@
+import six
 # DBA
 import os
 import time
@@ -116,16 +117,16 @@ def save_tiff(scan_ids, filepath, fields):
             print("No dark frame available for scan %d. Only outputting the light"
                 "field" % scan_id)
         try:
-            _save_tiff_helper(light, dark, filepath, fields, scan_id)
+            _save_tiff_helper(light, dark, header, filepath, fields, scan_id)
         except:
             print("There was a problem with scan %s. Traceback: " % scan_id)
             print(traceback.format_exc())
 
 
-def _save_tiff_helper(light, dark, filepath, fields, scan_id):
+def _save_tiff_helper(light, dark, header, filepath, fields, scan_id):
     data = {'light': light, 'dark': dark, 'subtracted': light-dark} 
     full_filepaths = []
-    for img_name, images in six.iteritems(data):
+    for img_name, images in data.items():
         for i, img in enumerate(images):
             filename = "scan-%s" % scan_id
             for field in fields:
