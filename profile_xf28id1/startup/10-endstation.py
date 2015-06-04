@@ -42,11 +42,10 @@ class NullPositioner(object):
         return True
 
     def describe(self):
-        return {'pain': {'source': 'pain', 'dtype': 'number'}}
+        return {}
 
     def read(self):
-        return {'pain': {'value': 7, 'timestamp': ttime.time()}}
-
+        return {}
 
 robot_sample_number = EpicsSignal('XF:28IDC-ES:1{SM}ID:Tgt-SP', 
         rw = True, name = 'robot_sample_number')
