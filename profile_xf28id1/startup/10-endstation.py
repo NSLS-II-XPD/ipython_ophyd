@@ -45,7 +45,7 @@ class NullPositioner(object):
         return {'pain': {'source': 'pain', 'dtype': 'number'}}
 
     def read(self):
-        return {'pain': {'value': 99999999, 'timestamp': ttime.time()}}
+        return {'pain': {'value': 7, 'timestamp': ttime.time()}}
 
 
 robot_sample_number = EpicsSignal('XF:28IDC-ES:1{SM}ID:Tgt-SP', 
