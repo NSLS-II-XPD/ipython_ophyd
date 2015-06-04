@@ -27,6 +27,9 @@ class NullPositioner(object):
         st.done = True
         return None, st
 
+    def move(self, position, **kwargs):
+        return NullStatus()
+
     @property
     def timestamp(self):
         return [ttime.time()]
