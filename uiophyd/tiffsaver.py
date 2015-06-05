@@ -22,6 +22,13 @@ class TiffSaver(object):
     _mtime_window = 0.05
     _output_mtime = 0
     _timetiffs = None
+    default_suffixes = ("{scan_id:05d}", "{index:03d}",
+            "T{event.data[cs700]:03.1f}")
+
+
+    def __init__(self):
+        self.suffixes = list(self.default_suffixes)
+        return
 
 
     def info(self):
@@ -29,6 +36,7 @@ class TiffSaver(object):
         print("TiffSaver configuration:")
         print("  outputdir =", self.outputdir)
         print("  basename =", self.basename)
+        print("  suffixes =", self.suffixes)
         print("Last 5 tiff files:")
         tnms = self.timetiffs.values()
         for tn in tnms[-5:]:
@@ -213,14 +221,16 @@ class TiffSaver(object):
     # Helpers ----------------------------------------------------------------
 
     def _getOutputFilename(self, header, event, index):
-        scan_id = header.scan_id
-        dd = event.data
-        suffix = "{:05d}-{:03d}".format(scan_id, index)
-        if 'cs700' in dd:
-            tk = dd['cs700'][0]
-            suffix = "{}-T{:03.1f}".format(suffix, tk)
-        fmt = '{self.outputdir}/{self.basename}-{suffix}.tiff'
-        fname = fmt.format(self=self, suffix=suffix)
+        sflst = []
+        for s in self.suffixes:
+            try:
+                s2 = s.format(header=header, event=event, index=index,
+                        scan_id=header.scan_id)
+            except (AttributeError, KeyError):
+                continue
+            sflst.append(s2)
+        tailname = '-'.join([self.basename] + sflst) + '.tif'
+        fname = self.outputdir + '/' + tailname
         return fname
 
 # class TiffSaver
