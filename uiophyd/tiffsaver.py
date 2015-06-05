@@ -101,10 +101,10 @@ class TiffSaver(object):
                 return
         dd = event.data
         nlight = [k for k in dd if k.endswith('image_lightfield')]
-        Alight = dd[nlight[0]][0]
+        Alight = dd[nlight[0]]
         if isinstance(Alight, basestring):
             fill_event(event)
-            Alight = event.data[nlight[0]][0]
+            Alight = event.data[nlight[0]]
         if 3 == Alight.ndim:
             Alight = Alight.sum(axis=0)
         if 0 == Alight.size:
