@@ -170,7 +170,7 @@ class TiffSaver(object):
         """Produce header objects corresponding to scan specification.
 
         scanspec -- can be an integer index an array of indices,
-                    slice object like numpy.s_[_5:] or string uid.
+                    slice object like numpy.s_[-5:] or string uid.
 
         Return a list of header objects.
         """
