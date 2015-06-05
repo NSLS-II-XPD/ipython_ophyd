@@ -22,6 +22,7 @@ class TiffSaver(object):
     _mtime_window = 0.05
     _output_mtime = 0
     _timetiffs = None
+    dtype = numpy.float32
     default_suffixes = ("{scan_id:05d}", "{index:03d}",
             "T{event.data[cs700]:03.1f}")
 
@@ -37,6 +38,7 @@ class TiffSaver(object):
         print("  outputdir =", self.outputdir)
         print("  basename =", self.basename)
         print("  suffixes =", self.suffixes)
+        print("  dtype =", self.dtype)
         print("Last 5 tiff files:")
         tnms = self.timetiffs.values()
         for tn in tnms[-5:]:
@@ -108,16 +110,20 @@ class TiffSaver(object):
             else:
                 return
         dd = event.data
-        nlight = [k for k in dd if k.endswith('image_lightfield')]
-        Alight = dd[nlight[0]]
+        nlight = [k for k in dd if k.endswith('image_lightfield')][0]
+        Alight = dd[nlight]
         if isinstance(Alight, basestring):
             fill_event(event)
-            Alight = event.data[nlight[0]]
-        if 3 == Alight.ndim:
-            Alight = Alight.sum(axis=0)
-        if 0 == Alight.size:
+            Alight = event.data[nlight]
+        ndark = nlight.replace('lightfield', 'darkfield')
+        Adark = event.data.get(ndark, 0.0)
+        A = Alight - Adark
+        if 3 == A.ndim:
+            A = A.sum(axis=0)
+        if 0 == A.size:
             return
-        A = Alight
+        if self.dtype is not None:
+            A = A.astype(self.dtype)
         tifffile.imsave(filename, A.astype(numpy.float32))
         stinfo = os.stat(filename)
         os.utime(filename, (stinfo.st_atime, event.time))
