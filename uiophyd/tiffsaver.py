@@ -22,6 +22,7 @@ class TiffSaver(object):
     _mtime_window = 0.05
     _output_mtime = 0
     _timetiffs = None
+    _dryrun = False
     dtype = numpy.float32
     default_suffixes = ("{scan_id:05d}", "{index:03d}",
             "T{event.data[cs700]:03.1f}")
@@ -59,7 +60,8 @@ class TiffSaver(object):
         return
 
 
-    def saveScans(self, scanspec, basename=None):
+    def saveScans(self, scanspec,
+            basename=None, overwrite=False, dryrun=False):
         """Save the specified scans to the outputdir
 
         scanspec -- can be an integer index an array of indices or a slice
@@ -67,18 +69,28 @@ class TiffSaver(object):
                     corresponding scan_id in the data broker.
         basename -- optional basename to be used for exporting these scans.
                     If not specified, use self.basename.
+        overwrite -- when True, write all specified scans now and remove any
+                    previously exported tiff files, even if written using a
+                    different basename.  When False, skip all scanspec scans
+                    that were already saved.
+        dryrun   -- Do not write anything, just print out what would be done.
+                    Useful for checking the output names and the suffixes
+                    attribute.
 
         No return value.
         """
         headers = self.findHeaders(scanspec)
         stash_basename = self.basename
+        stash_dryrun = self._dryrun
         if basename is not None:
             self.basename = basename
+        self._dryrun = dryrun
         try:
             for h in headers:
-                self.writeHeader(h)
+                self.writeHeader(h, overwrite=overwrite)
         finally:
             self.basename = stash_basename
+            self._dryrun = stash_dryrun
         return
 
 
@@ -105,9 +117,12 @@ class TiffSaver(object):
         from uiophyd.brokerutils import fill_event
         savedfile = self.findSavedEvent(event)
         if savedfile:
+            msgrm = 'remove existing file {}'.format(savedfile)
+            msgskip = 'skip {}, already saved as {}'.format(filename, savedfile)
             if overwrite:
-                os.remove(savedfile)
+                self._dryordo(msgrm, os.remove, savedfile)
             else:
+                self._dryordo(msgskip, lambda : None)
                 return
         dd = event.data
         nlight = [k for k in dd if k.endswith('image_lightfield')][0]
@@ -124,9 +139,13 @@ class TiffSaver(object):
             return
         if self.dtype is not None:
             A = A.astype(self.dtype)
-        tifffile.imsave(filename, A.astype(numpy.float32))
-        stinfo = os.stat(filename)
-        os.utime(filename, (stinfo.st_atime, event.time))
+        def _writetiff():
+            tifffile.imsave(filename, A)
+            stinfo = os.stat(filename)
+            os.utime(filename, (stinfo.st_atime, event.time))
+        msg = 'write {} using {}, adjust mtime'.format(
+                filename, A.dtype)
+        self._dryordo(msg, _writetiff)
         return
 
 
@@ -238,5 +257,14 @@ class TiffSaver(object):
         tailname = '-'.join([self.basename] + sflst) + '.tif'
         fname = self.outputdir + '/' + tailname
         return fname
+
+
+    def _dryordo(self, msg, fnc, *args, **kwargs):
+        if self._dryrun:
+            if msg:
+                print('[dryrun]', msg)
+        else:
+            fnc(*args, **kwargs)
+        return
 
 # class TiffSaver
