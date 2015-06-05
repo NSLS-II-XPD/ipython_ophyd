@@ -6,12 +6,8 @@ from metadatastore.api import find_events
 
 def blank_events(header):
     "Return a list of unfilled events."
-    descriptors = header.event_descriptors
-    if len(descriptors) > 1:
-        raise NotImplementedError
-    descriptor, = descriptors
-    raw_events = find_events(descriptor=descriptor)
-    # order in chronological order
+    from dataportal.broker import DataBroker as db
+    raw_events = list(db.fetch_events(header, fill=False))
     raw_events.reverse()
     return raw_events
 
