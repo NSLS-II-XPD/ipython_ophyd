@@ -131,7 +131,7 @@ class TiffSaver(object):
             fill_event(event)
             Alight = event.data[nlight]
         ndark = nlight.replace('lightfield', 'darkfield')
-        Adark = event.data.get(ndark, 0.0)
+        Adark = event.data.get(ndark, 0)
         A = Alight - Adark
         if 3 == A.ndim:
             A = A.sum(axis=0)
@@ -237,7 +237,7 @@ class TiffSaver(object):
         allfiles = [os.path.join(self.outputdir, f)
                 for f in os.listdir(self.outputdir)]
         alltiffs = [f for f in allfiles
-                if f.endswith('.tiff') and os.path.isfile(f)]
+                if f.endswith('.tif') and os.path.isfile(f)]
         tt = sorted((os.path.getmtime(f), f) for f in alltiffs)
         self._timetiffs = OrderedDict(tt)
         self._output_mtime = os.path.getmtime(self.outputdir)
