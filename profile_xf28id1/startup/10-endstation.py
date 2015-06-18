@@ -73,14 +73,14 @@ gas = XPDGasSwitcher(requested_pos='XF:28IDC-ES:1{Env:02}Pos-SP',
         current_pos='XF:28IDC-ES:1{Env:02}Pos-I',
         gasdict = {1: 'O2', 2: 'N2', 3: 'He'})
 
-th = EpicsMotor('XF:28IDC-ES:1{Dif-Ax:Th}Mtr', name='th')
-tth = EpicsMotor('XF:28IDC-ES:1{Dif-Ax:2ThI}Mtr', name='tth')
-diff_x = EpicsMotor('XF:28IDC-ES:1{Dif-Ax:X}Mtr', name='diff_x')
-diff_y = EpicsMotor('XF:28IDC-ES:1{Dif-Ax:Y}Mtr', name='diff_y')
+th = EpicsMotor('XF:28IDC-ES:1{Dif:1-Ax:Th}Mtr', name='th')
+tth = EpicsMotor('XF:28IDC-ES:1{Dif:1-Ax:2ThI}Mtr', name='tth')
+diff_x = EpicsMotor('XF:28IDC-ES:1{Dif:1-Ax:X}Mtr', name='diff_x')
+diff_y = EpicsMotor('XF:28IDC-ES:1{Dif:1-Ax:Y}Mtr', name='diff_y')
 
 cs700 = PVPositioner('XF:28IDC-ES:1{Env:01}T-SP',
                      readback='XF:28IDC-ES:1{Env:01}T-I',
-                     done='XF:28IDC-ES:1{Env:01}Cmd-Busy', done_val=0,
+                     #done='XF:28IDC-ES:1{Env:01}Cmd-Busy', done_val=0,
                      stop='XF:28IDC-ES:1{Env:01}Cmd-Cmd', stop_val=13,
                      put_complete=True, name='cs700')
 
