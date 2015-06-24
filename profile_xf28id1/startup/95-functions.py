@@ -1,3 +1,5 @@
+
+import numpy as np
 import six
 # DBA
 import os
@@ -25,16 +27,33 @@ def show_last():
     ax3.set(title='subtracted')
 
 
-def show(light_id, dark_id=None):
+def show(scan_id, log=True, cmap='jet'):
     """Show light/dark/difference based on two scan ids
     if no dark_id is provided, it is assumed that the dark_id
     was collected first
     """
-    light = ss[light_id]['pe1_image_lightfield'][0].astype(float)
-    if not dark_id:
-        dark_id = light_id-1
-    dark = ss[dark_id]['pe1_image_lightfield'][0].astype(float)
-    _show_subtracted(light, dark)
+    hdr = db[scan_id]
+    ev = db.fetch_events(hdr)
+    ev0 = next(ev)
+    light = ev0.data['pe1_image_lightfield']
+    dark = ev0.data['pe1_image_darkfield']
+    fig, (ax1, ax2, ax3) = plt.subplots(ncols=3, figsize=(15, 5))
+    if log:
+        diff = np.log(light-dark)
+        light = np.log(light)
+        dark = np.log(dark)
+    else:
+        diff = light-dark
+#    diff[diff<0] = 0
+    ax1.imshow(light, cmap=cmap)
+    ax1.set_title('logarithmic scaling of light image')
+    ax2.imshow(dark, cmap=cmap)
+    ax2.set_title('logarithmic scaling of dark image')
+    ax3.imshow(diff, cmap=cmap)
+    ax3.set_title('logarithmic scaling of (light-dark)')
+    fig.canvas.show()
+
+    #_show_subtracted(light, dark)
 
 def show_id(scan_id, subtract_dark=True):
     data = ss[scan_id]
