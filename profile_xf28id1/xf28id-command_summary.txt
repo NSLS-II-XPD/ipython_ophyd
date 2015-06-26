@@ -75,9 +75,8 @@ Where samplenum is the number of the sample in the robot carousel and sampledict
 is, once again, sampledict is the python dictionary with sample info. This
 executes the following sequence:
 1. move diode into the beam
-2. move the diffraction stage back to its home position 
+2. move the diffraction stage back to its home position
 3. save a diode measurment with no sample
 
 When the robot is ready to be used this will also automatically load a sample
 and start a scan.
-

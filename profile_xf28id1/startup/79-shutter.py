@@ -25,7 +25,7 @@ class Nsls2Shutter(Shutter):
        Shutter.__init__(self)
        signals = [EpicsSignal(open_status, write_pv=open, alias='_open'),
                   EpicsSignal(close_status, write_pv=close, alias='_close'),
-                  ] 
+                  ]
 
        for sig in signals:
            self.add_signal(sig)
@@ -55,7 +55,7 @@ sh1 = Nsls2Shutter(open='XF:28IDC-ES:1{Sh:Exp}Cmd:Opn-Cmd',
                    close_status='XF:28IDC-ES:1{Sh:Exp}Sw:Cls1-Sts')
 
 class PhotonShutter(EpicsSignal):
-    def __init__(self, read_pv, open_pv, open_status, close_pv, close_status, 
+    def __init__(self, read_pv, open_pv, open_status, close_pv, close_status,
                  *args, **kw):
         self.open_pv = epics.PV(open_pv)
         self.open_status = open_status
@@ -87,5 +87,3 @@ photon_shutter = PhotonShutter(
         close_pv='XF:28IDA-PPS{PSh}Cmd:Cls-Cmd',
         close_status='XF:28IDA-PPS{PSh}Cmd:Cls-Sts',
         name='photon_shutter')
-
-

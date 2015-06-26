@@ -8,4 +8,3 @@ dscan = DScan()
 # Use ct as a count which is a single scan.
 
 ct = Count()
-

@@ -16,7 +16,7 @@ class RobotPositioner(object):
         return
 
 
-    @property 
+    @property
     def sample(self):
         return self._sample_number_pv.value
 
@@ -63,7 +63,3 @@ class RobotPositioner(object):
         while self._busy():
             time.sleep(self.WAIT_TIME)
         return
-
-
-
-

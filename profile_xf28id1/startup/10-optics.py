@@ -1,6 +1,6 @@
 from ophyd.controls import EpicsMotor
 
-# A Hutch 
+# A Hutch
 ## Filter
 fltr6_y = EpicsMotor('XF:28IDA-OP:0{Fltr:6-Ax:Y}Mtr', name='fltr6_y')
 
@@ -34,7 +34,7 @@ slt_h_o = EpicsMotor('XF:28IDA-OP:2{Slt:H-Ax:O}Mtr', name='slt_h_o')
 slt_h_xc = EpicsMotor('XF:28IDA-OP:2{Slt:H-Ax:XCtr}Mtr', name='slt_h_xc')
 slt_h_xg = EpicsMotor('XF:28IDA-OP:2{Slt:H-Ax:XGap}Mtr', name='slt_h_xg')
 
-## Filter 
+## Filter
 fltr1_y = EpicsMotor('XF:28IDA-OP:2{Fltr:1-Ax:Y}Mtr', name='fltr1_y')
 
 ## Mirror

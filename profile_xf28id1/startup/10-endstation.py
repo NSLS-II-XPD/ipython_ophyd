@@ -47,7 +47,7 @@ class NullPositioner(object):
     def read(self):
         return {}
 
-robot_sample_number = EpicsSignal('XF:28IDC-ES:1{SM}ID:Tgt-SP', 
+robot_sample_number = EpicsSignal('XF:28IDC-ES:1{SM}ID:Tgt-SP',
         rw = True, name = 'robot_sample_number')
 robot_load_cmd = EpicsSignal('XF:28IDC-ES:1{SM}Cmd:Load-Cmd.PROC',
         rw = True, name = 'robot_load_cmd')

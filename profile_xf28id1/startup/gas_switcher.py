@@ -27,7 +27,7 @@ class XPDGasSwitcher(GasSwitcher):
                               name='current_gas'),
                   EpicsSignal(requested_pos, alias='_requested_pos',
                               name='requested_gas'),
-                  ] 
+                  ]
        self._gasdict = gasdict
        for sig in signals:
            self.add_signal(sig)
@@ -85,7 +85,7 @@ class XPDGasSwitcher(GasSwitcher):
         return
 
 
-    def print_curr_gas(self): 
+    def print_curr_gas(self):
         print('Current gas is:')
         print(self._gasdict[self.current_pos])
         return
@@ -93,5 +93,3 @@ class XPDGasSwitcher(GasSwitcher):
     @property
     def lookup(self):
         return {str(k): v for k, v in six.iteritems(self._gasdict)}
-
-
