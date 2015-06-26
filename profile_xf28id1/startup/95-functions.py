@@ -27,7 +27,7 @@ def show_last():
     ax3.set(title='subtracted')
 
 
-def show(scan_id, log=True, cmap='jet'):
+def show(scan_id, logscale=True, cmap='jet'):
     """Show light/dark/difference based on two scan ids
     if no dark_id is provided, it is assumed that the dark_id
     was collected first
@@ -38,7 +38,7 @@ def show(scan_id, log=True, cmap='jet'):
     light = ev0.data['pe1_image_lightfield']
     dark = ev0.data['pe1_image_darkfield']
     fig, (ax1, ax2, ax3) = plt.subplots(ncols=3, figsize=(15, 5))
-    if log:
+    if logscale:
         diff = np.log(light-dark)
         light = np.log(light)
         dark = np.log(dark)
