@@ -27,33 +27,61 @@ def show_last():
     ax3.set(title='subtracted')
 
 
-def show(scan_id, logscale=True, cmap='jet'):
-    """Show light/dark/difference based on two scan ids
-    if no dark_id is provided, it is assumed that the dark_id
-    was collected first
-    """
-    hdr = db[scan_id]
-    ev = db.fetch_events(hdr)
-    ev0 = next(ev)
-    light = ev0.data['pe1_image_lightfield']
-    dark = ev0.data['pe1_image_darkfield']
-    fig, (ax1, ax2, ax3) = plt.subplots(ncols=3, figsize=(15, 5))
-    if logscale:
-        diff = np.log(light-dark)
-        light = np.log(light)
-        dark = np.log(dark)
-    else:
-        diff = light-dark
-#    diff[diff<0] = 0
-    ax1.imshow(light, cmap=cmap)
-    ax1.set_title('logarithmic scaling of light image')
-    ax2.imshow(dark, cmap=cmap)
-    ax2.set_title('logarithmic scaling of dark image')
-    ax3.imshow(diff, cmap=cmap)
-    ax3.set_title('logarithmic scaling of (light-dark)')
-    fig.canvas.show()
+def show(scan_id, step=0, frame=None, logscale=True, cmap='jet'):
+    """Plot light, dark and subtracted image arrays for the given scan.
 
-    #_show_subtracted(light, dark)
+    scan_id  -- integer index or any other scan specification accepted
+                by data broker.
+    step     -- index of the scan step that should be plotted.
+    frame    -- optional selection of frames for steps that contain multiple
+                exposures.  This is used as an index for a 3D image array,
+                which is then summed along its first axis.
+    logscale -- flag for plotting logarithm of intensities.
+    cmap     -- colormap to be used in the array plots.
+
+    No return value.
+    """
+    from uiophyd.brokerutils import blank_events, fill_event
+    from uiophyd.pylab_utilities import reportzcoord
+    header = db[scan_id]
+    events = blank_events(header)
+    ev = events[step]
+    fill_event(ev)
+    light = ev.data['pe1_image_lightfield']
+    dark = (ev.data['pe1_image_darkfield']
+            if 'pe1_image_darkfield' in ev.data else np.zeros_like(light))
+    signal = light - dark
+    selectedframes = [0]
+    if 3 == signal.ndim:
+        if frame is None:  frame = slice(None)
+        frameindices = np.arange(len(light))
+        selectedframes = frameindices[frame].reshape(-1)
+        shp = (-1,) + signal.shape[1:]
+        light = light[frame].reshape(shp).sum(axis=0)
+        dark = dark[frame].reshape(shp).sum(axis=0)
+        signal = signal[frame].reshape(shp).sum(axis=0)
+    if logscale:
+        # low-threshold all arrays at 1.
+        light = np.log10(np.where(light > 1, light, 1))
+        dark = np.log10(np.where(dark > 1, dark, 1))
+        signal = np.log10(np.where(signal > 1, signal, 1))
+    # create the figure and axes
+    fig, (ax1, ax2, ax3) = plt.subplots(ncols=3, figsize=(15, 5))
+    sctp = 'logarithmic' if logscale else 'linear'
+    fig.text(0.5, .95,
+            'scan {}, step {}, summed frames {} in {} color scale.'.format(
+                scan_id, step, selectedframes, sctp),
+            horizontalalignment='center')
+    ax1.imshow(light, cmap=cmap)
+    ax1.set_title('Light')
+    ax2.imshow(dark, cmap=cmap)
+    ax2.set_title('Dark')
+    ax3.imshow(signal, cmap=cmap)
+    ax3.set_title('(Light - Dark)')
+    reportzcoord([ax1, ax2, ax3])
+    fig.canvas.show()
+    return
+
 
 def show_id(scan_id, subtract_dark=True):
     data = ss[scan_id]
