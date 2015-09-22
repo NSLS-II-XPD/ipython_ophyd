@@ -17,7 +17,7 @@ class TiffSaver(object):
     _basename = 'scan'
     _databroker = None
 
-    start_time = datetime.datetime(2015, 03, 19)
+    start_time = datetime.datetime(2015, 3, 19)
     start_time = time.mktime(start_time.timetuple())
     _mtime_window = 0.05
     _output_mtime = 0
