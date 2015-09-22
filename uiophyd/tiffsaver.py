@@ -41,7 +41,7 @@ class TiffSaver(object):
         print("  suffixes =", self.suffixes)
         print("  dtype =", self.dtype)
         print("Last 5 tiff files:")
-        tnms = self.timetiffs.values()
+        tnms = list(self.timetiffs.values())
         for tn in tnms[-5:]:
             print("  " + tn)
         return
@@ -52,7 +52,7 @@ class TiffSaver(object):
         """
         print("#", self.outputdir)
         tt = self.timetiffs
-        tms = tt.keys()
+        tms = list(tt.keys())
         if count:  tms = tms[-count:]
         for ti in tms:
             tmiso = datetime.datetime.fromtimestamp(round(ti)).isoformat()
@@ -96,7 +96,7 @@ class TiffSaver(object):
 
     def saveNewScans(self):
         "Export scan data that were not yet saved to outputdir."
-        lasttime = max([self.start_time] + self.timetiffs.keys())
+        lasttime = max([self.start_time] + list(self.timetiffs.keys()))
         db = self.databroker
         headers = db.find_events(start_time=lasttime)
         for header in headers:
@@ -158,7 +158,7 @@ class TiffSaver(object):
         """
         import bisect
         tt = self.timetiffs
-        tms = tt.keys()
+        tms = list(tt.keys())
         idx = bisect.bisect(tms, e.time)
         for ti in tms[idx-1:idx+1]:
             if abs(e.time - ti) < self._mtime_window:
