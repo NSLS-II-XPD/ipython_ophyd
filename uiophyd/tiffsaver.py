@@ -127,7 +127,7 @@ class TiffSaver(object):
         dd = event.data
         nlight = [k for k in dd if k.endswith('image_lightfield')][0]
         Alight = dd[nlight]
-        if isinstance(Alight, basestring):
+        if isinstance(Alight, str):
             fill_event(event)
             Alight = event.data[nlight]
         ndark = nlight.replace('lightfield', 'darkfield')
@@ -180,7 +180,7 @@ class TiffSaver(object):
             rv.append(db[scanspec])
         elif isinstance(scanspec, slice):
             rv += db[scanspec]
-        elif isinstance(scanspec, basestring):
+        elif isinstance(scanspec, str):
             rv += db.find_headers(uid=scanspec)
         else:
             rv += map(self.findHeaders, scanspec)
