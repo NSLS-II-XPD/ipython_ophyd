@@ -64,9 +64,10 @@ class TiffSaver(object):
             basename=None, overwrite=False, dryrun=False):
         """Save the specified scans to the outputdir
 
-        scanspec -- can be an integer index an array of indices or a slice
-                    object like numpy.s_[_5:].  This looks up entries with
-                    corresponding scan_id in the data broker.
+        scanspec -- can be an integer index, array of indices, a slice
+                    object like numpy.s_[-5:] or a Header document from data
+                    broker.  This looks up entries with corresponding scan_id
+                    in the data broker.
         basename -- optional basename to be used for exporting these scans.
                     If not specified, use self.basename.
         overwrite -- when True, write all specified scans now and remove any
@@ -169,21 +170,27 @@ class TiffSaver(object):
     def findHeaders(self, scanspec):
         """Produce header objects corresponding to scan specification.
 
-        scanspec -- can be an integer index an array of indices,
+        scanspec -- can be an integer index, array of indices,
                     slice object like numpy.s_[-5:] or string uid.
+        scanspec -- can be an integer index, array of indices, a slice
+                    object like numpy.s_[-5:], a string uid, or a Header
+                    document from data broker.
 
         Return a list of header objects.
         """
+        from metadatastore.doc import Document
         db = self.databroker
         rv = []
-        if isinstance(scanspec, int):
+        if isinstance(scanspec, Document):
+            rv.append(scanspec)
+        elif isinstance(scanspec, int):
             rv.append(db[scanspec])
         elif isinstance(scanspec, slice):
             rv += db[scanspec]
         elif isinstance(scanspec, str):
             rv += db(uid=scanspec)
         else:
-            rv += map(self.findHeaders, scanspec)
+            rv += sum(map(self.findHeaders, scanspec), [])
         return rv
 
     # Properties -------------------------------------------------------------
