@@ -247,10 +247,11 @@ class TiffSaver(object):
 
     def _getOutputFilename(self, header, event, index):
         sflst = []
+        scan_id=header.start.scan_id
         for s in self.suffixes:
             try:
                 s2 = s.format(header=header, event=event, index=index,
-                        scan_id=header.scan_id)
+                        scan_id=scan_id)
             except (AttributeError, KeyError):
                 continue
             sflst.append(s2)
