@@ -105,8 +105,8 @@ class TiffSaver(object):
 
 
     def writeHeader(self, header, overwrite=False):
-        from uiophyd.brokerutils import blank_events
-        events = blank_events(header)
+        from dataportal import get_events
+        events = get_events(header)
         for n, e in enumerate(events):
             fname = self._getOutputFilename(header=header, event=e, index=n)
             self.writeEvent(fname, e, overwrite=overwrite)
@@ -181,7 +181,7 @@ class TiffSaver(object):
         elif isinstance(scanspec, slice):
             rv += db[scanspec]
         elif isinstance(scanspec, str):
-            rv += db.find_headers(uid=scanspec)
+            rv += db(uid=scanspec)
         else:
             rv += map(self.findHeaders, scanspec)
         return rv
