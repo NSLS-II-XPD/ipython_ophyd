@@ -33,3 +33,26 @@ def ui_nonzerofraction(header, index=0):
     cnz = (x.flatten() != 0).sum()
     rv = float(cnz) / x.size
     return rv
+
+
+def has_pe1signal(header):
+    """Return True if header contains a non-trivial pe1_image_lightfield.
+
+    pe1_image_lightfield must exist and it must have at least 10 unique
+    values.
+    """
+    from dataportal import get_images, get_events
+    from filestore.handlers import IntegrityError
+    detname = 'pe1_image_lightfield'
+    if not header.descriptors:  return False
+    e = next(get_events(header, fill=False))
+    if detname not in e.data:
+        return False
+    try:
+        imgs = get_images(header, 'pe1_image_lightfield')
+    except (IntegrityError, IOError):
+        return False
+    A = imgs.get_frame(0)
+    uniquevalues = set(A.flatten())
+    rv = (len(uniquevalues) >= 10)
+    return rv
