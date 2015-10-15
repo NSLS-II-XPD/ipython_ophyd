@@ -135,7 +135,7 @@ class TiffSaver(object):
         Adark = event.data.get(ndark, 0)
         A = Alight - Adark
         if 3 == A.ndim:
-            A = A.sum(axis=0)
+            A = A.sum(axis=-1)
         if 0 == A.size:
             return
         if self.dtype is not None:
