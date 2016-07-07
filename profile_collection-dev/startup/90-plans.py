@@ -112,6 +112,12 @@ def MED(gasses, minT, maxT, num_steps, cycle_time):
     # Step 1
     yield from abs_set(gas, gasses[0])
     # Steps 2
+
+    # optional darkframe -- for emergencies :-)
+    # yield from abs_set(shctl1, 0)
+    # yield from count(dets, md={'role': 'dark'})
+    # yield from abs_set(shctl1, 1)
+
     yield from subs_wrapper(scan(dets, eurotherm, minT, maxT, num_steps),
                             [LiveTable(dets), export_at_end])
     # Alternate between gasses forever.
