@@ -1,9 +1,6 @@
-import time
 import os
 import numpy as np
-from bluesky.plans import (scan, subs_wrapper, abs_set, pchain, reset_positions_wrapper, count, list_scan,
-                           open_run, close_run, stage, unstage, trigger_and_read, checkpoint)
-from bluesky.callbacks.broker import post_run, LiveTiffExporter
+from bluesky.plans import scan, subs_wrapper, abs_set, pchain, reset_positions_wrapper, count, list_scan
 from bluesky.callbacks import LiveTable, LivePlot
 from bluesky.plan_tools import print_summary
 
@@ -33,56 +30,14 @@ def Ecal(start=-4, stop=-1.5, step_size=0.01):
     yield from plan
 
 
-def timed_count(detectors, total_time, *, md=None):
-    if md is None:
-        md = {}
-    md = ChainMap(
-        md,
-        {'detectors': [det.name for det in detectors],
-         'total_time': total_time,
-         'plan_args': {'detectors': list(map(repr, detectors)), 'total_time': total_time},
-         'plan_name': 'timed_count'})
-
-    for det in detectors:
-        yield from stage(det)
-    yield from open_run(md=md)
-
-    end_time = total_time + time.time()
-
-    while True:
-        if time.time() > end_time:
-            break
-        yield from checkpoint()
-        yield from trigger_and_read(detectors)
-
-    for det in detectors:
-        yield from unstage(det)
-    yield from close_run()
-
-
-def MED(gasses, minT, maxT, num_steps, cycle_time):
+def MED(init_gas, other_gas, minT, maxT, num_steps, num_steady, num_trans, num_loops=2):
     """
-    Modulated Excitation Diffraction plan
-
     1. Start flowing the initial gas.
     2. Scan the temperature from minT to maxT in `num_steps` evenly-spaced steps.
     3. Hold temperature at maxT and take  `num_steady` images.
-    4. Switch the gas, still holding at maxT and take `num_steady` images.
-    5. Repeat.
-
-    Parameters
-    ----------
-    gasses : list
-        e.g., ['N', Ar']
-        These gasses must be in `gas.gas_list` but they may be in any order.
-    minT : number
-        minimum temp in whatever units the temp controller uses
-    maxT : number
-        minimum temp in whatever units the temp controller uses
-    num_steps : integer
-        number of points to sample between minT and maxT inclusive
-    cycle_time : number
-        time per gas cycle to take a time series; units are seconds
+    4. Repeat (2) and (3) `num_loops` times.
+    5. Switch the gas to `other_gas` and take `num_trans` acquisitions.
+    6. Switch it back and take another `num_trans` acquisitions.
 
     Example
     -------
@@ -91,37 +46,23 @@ def MED(gasses, minT, maxT, num_steps, cycle_time):
     >>> gas.gas_list = ['O2', 'CO2']
 
     Optionally, preview the plan.
-    >>> print_summary(MED(["N", "Ar"], 30, 50, 3, 10))
+    >>> print_summary(MED('O2', 'C02', 200, 300, 21, 20, 60))
 
     Execute it.
-    >>> RE(MED(["N", "Ar"], 30, 50, 3, 10))
+    >>> RE(MED('O2', 'C02', 200, 300, 21, 20, 60))
+
     """
-    # HACK! The eurotherm is misbehaving so we are replacing with cs700 here.
-    # Remove this line!!!
-    eurotherm = cs700
-
-    template = "/home/xf28id1/xpdUser/med_tiffs/{start.scan_id}_{event.seq_num:04d}.tiff"
-    exporter = LiveTiffExporter('pe1_image', template)
-    export_at_end = post_run(exporter)
-
-    # These are commented out that the pe1c can be configured interactively.
-    # pe1c.images_per_set.put(1)
-    # pe1c.number_of_sets.put(1)
-
-    dets = [pe1c, rga, gas.current_gas, eurotherm]
     # Step 1
-    yield from abs_set(gas, gasses[0])
-    # Steps 2
+    yield from abs_set(gas, init_gas)
+    # Steps 2 and 3 in a loop.
+    for _ in range(num_loops):
+        yield from subs_wrapper(scan([pe1, gas.current_gas], eurotherm, minT, maxT, num_steps),
+                            LiveTable([eurotherm, gas.current_gas]))
+        yield from subs_wrapper(count([pe1], num_steady), LiveTable([]))
+    # Step 4
+    yield from abs_set(gas, other_gas)
+    yield from subs_wrapper(count([pe1], num_steady), LiveTable([]))
+    # Step 6
+    yield from abs_set(gas, init_gas)
+    yield from subs_wrapper(count([pe1], num_steady), LiveTable([]))
 
-    # optional darkframe -- for emergencies :-)
-    # yield from abs_set(shctl1, 0)
-    # yield from count(dets, md={'role': 'dark'})
-    # yield from abs_set(shctl1, 1)
-
-    yield from subs_wrapper(scan(dets, eurotherm, minT, maxT, num_steps),
-                            [LiveTable(dets), export_at_end])
-    # Alternate between gasses forever.
-    for gas_name in itertools.cycle(gasses):
-        yield from abs_set(gas, gas_name)
-        yield from subs_wrapper(timed_count(dets, total_time=cycle_time),
-                                [LiveTable(dets), export_at_end])

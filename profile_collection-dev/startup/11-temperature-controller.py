@@ -34,3 +34,7 @@ cs700.setpoint.name = 'temperature_setpoint'
 eurotherm = EpicsSignalPositioner('XF:28IDC-ES:1{Env:04}T-I',
                                   write_pv='XF:28IDC-ES:1{Env:04}T-SP',
                                   tolerance=10, name='eurotherm')
+
+euro_ramp_rate = EpicsSignal('XF:28IDC-ES:1{Env:04}Rate:Ramp-RB',
+                              write_pv='XF:28IDC-ES:1{Env:04}Rate:Ramp-SP',
+                              name='euro_ramp_rate')
