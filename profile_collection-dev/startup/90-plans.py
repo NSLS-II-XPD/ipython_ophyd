@@ -420,3 +420,106 @@ def single_shot(is_calibration, calibration_uid, is_background, background_uid, 
     light_md.update({'role': 'light', 'dark_uid': dark_uid})
     yield from count(dets, md=light_md)
     yield from abs_set(shctl1, 0)
+
+
+def better_temp_gas_run(gasses, temp_list, time_list, calibration_uid, background_uid,
+                        is_background, md=None):
+    """
+
+    Parameters
+    ----------
+    gasses : list
+        e.g., ['N', Ar']
+        The gas to be used at each time step
+    temp_list : list
+        The temperatures to be used at each time step
+    time_list: list
+        List of time points
+    calibration_uid: str
+        The uid for the calibration
+    background_uid: str
+        The uid for the background
+    is_background: bool
+        Flag for background data
+    md: dict
+        Additional metadata
+
+    Example
+    -------
+    Set the gasses. They can be in any other, nothing to do with
+    the order they are used in the plan.
+    >>> gas.gas_list = ['O2', 'CO2']
+
+    Optionally, preview the plan.
+    >>> print_summary(better_temp_gas_run(["N", "Ar"]*10, [50]*10, list(range(0, 300*10, 300)), 'hello', 'world', True))
+
+    Execute it.
+    >>> RE(better_temp_gas_run(["N", "Ar"]*10, [50]*10, list(range(0, 300*10, 300)), 'hello', 'world', True))
+    """
+    # Make certain we have the same amount of gas, temp, and time intervals
+    assert len(temp_list) == (time_list)
+    assert len(gasses) == len(time_list)
+
+
+    cal_bg_asoc = {'is_calibration': False,
+                   'calibration_uid': calibration_uid,
+                   'is_background': is_background,
+                   'background_uid': background_uid}
+
+    template = "/home/xf28id1/xpdUser/tiff_base/{start.scan_id}_{event.seq_num:04d}_{eurotherm.get()}.tiff"
+    exporter = LiveTiffExporter('pe1_image', template)
+    export_at_end = post_run(exporter)
+
+    dets = [pe1c, gas.current_gas, eurotherm]
+    # optional darkframe -- for emergencies :-)
+    print('taking dark')
+    dark_uid = str(uuid4())
+    yield from abs_set(shctl1, 0)
+    yield from count(dets, md={'role': 'dark', 'dark_uid': dark_uid})
+    yield from abs_set(shctl1, 1)
+    if md is None:
+        md = {}
+    md = ChainMap(
+        md,
+        {'detectors': [det.name for det in dets],
+         'time_list': time_list,
+         'temp_list': temp_list,
+         'plan_args': {'detectors': list(map(repr, dets)),
+                       'time_list': time_list},
+         'plan_name': 'temp_gas_run'},
+        cal_bg_asoc,
+        {'dark_uid': dark_uid, 'role': 'light'}
+    )
+
+    def inner():
+        # Step 1
+        # setup detector
+        for det in dets:
+            yield from stage(det)
+        open_rtn = (yield from open_run(md=md))
+
+        # Just start taking images, we can filter it later
+
+        # TODO: This could b more elegant, the temps/ramps are computed based
+        # off the next step not the current step
+        for i, (gas_selection, temp, time_position) in enumerate(zip(gasses, temp_list, time_list)):
+            # Change gasses
+            yield from abs_set(gas, gas_selection, wait=False)
+            # Set the temperature in C and ramprate in C/s
+            # Note:the rate is calculated from the set temps and times
+            if i+1 < len(temp_list):
+                yield from abs_set(euro_ramp_rate, np.abs(temp_list[i+1] - eurotherm.get()) / time_position, wait=False)
+                yield from abs_set(eurotherm, temp, wait=False)
+                print('ramp_rate', euro_ramp_rate.get())
+            yield from timed_count_guts(dets, total_time=time_position,
+                                        md=cal_bg_asoc)
+
+        yield from abs_set(shctl1, 0)
+
+        for det in dets:
+            yield from unstage(det)
+        yield from close_run()
+        return open_rtn
+
+
+    return (yield from subs_wrapper(inner(), [LiveTable(dets), export_at_end]))
