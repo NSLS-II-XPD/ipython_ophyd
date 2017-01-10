@@ -79,3 +79,5 @@ pyiid/grad_test.txt
 old_files/
 benchmarks/
 extra/
+history.sqlite
+*.swp
