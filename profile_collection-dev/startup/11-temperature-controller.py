@@ -1,14 +1,14 @@
-from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO
+from ophyd import (Device, PVPositioner, EpicsSignal, EpicsSignalRO)
 from ophyd.mixins import EpicsSignalPositioner
-from ophyd import Component as C
+from ophyd import Component as Cpt
 from ophyd.device import DeviceStatus
 
 
 class CS700TemperatureController(PVPositioner):
-    readback = C(EpicsSignalRO, 'T-I')
-    setpoint = C(EpicsSignal, 'T-SP')
-    done = C(EpicsSignalRO, 'Cmd-Busy')
-    stop_signal = C(EpicsSignal, 'Cmd-Cmd')
+    readback = Cpt(EpicsSignalRO, 'T-I')
+    setpoint = Cpt(EpicsSignal, 'T-SP')
+    done = Cpt(EpicsSignalRO, 'Cmd-Busy')
+    stop_signal = Cpt(EpicsSignal, 'Cmd-Cmd')
     
     def set(self, *args, timeout=None, **kwargs):
         return super().set(*args, timeout=timeout, **kwargs)
@@ -31,10 +31,11 @@ cs700.readback.name = 'temperature'
 cs700.setpoint.name = 'temperature_setpoint'
 
 
-eurotherm = EpicsSignalPositioner('XF:28IDC-ES:1{Env:04}T-I',
-                                  write_pv='XF:28IDC-ES:1{Env:04}T-SP',
-                                  tolerance=10, name='eurotherm')
+class Eurotherm(Device):
+    temp = Cpt(EpicsSignalPositioner, 'T-I', write_pv='T-SP',
+               tolerance=10, timeout=600)
 
-euro_ramp_rate = EpicsSignal('XF:28IDC-ES:1{Env:04}Rate:Ramp-RB',
-                              write_pv='XF:28IDC-ES:1{Env:04}Rate:Ramp-SP',
-                              name='euro_ramp_rate')
+    ramp_rate = Cpt(EpicsSignal, 'Rate:Ramp-RB', write_pv='Rate:Ramp-SP')
+
+
+eurotherm = Eurotherm('XF:28IDC-ES:1{Env:04}', name='eurotherm')

@@ -18,7 +18,6 @@ def take_dark():
     sleep(2)
     return uid
 
-
 def run(motor, x, start, stop, num_steps, loops, *, exposure=1,  **metadata):
     print('moving %s to initial position' % motor.name)
     subs = [LiveTable(['pe1_stats1_total', motor.name]),
