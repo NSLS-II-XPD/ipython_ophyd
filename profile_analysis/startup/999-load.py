@@ -1,5 +1,5 @@
 import os
-import sys
+from shed.event_streams import istar
 
 # expected code
 # 0 -> beamline
@@ -9,19 +9,16 @@ os.environ['XPDAN_SETUP'] = str(0)
 
 # setup glbl
 from xpdan.glbl import an_glbl
-from xpdan.data_reduction import *
+from xpdan.pipelines.main import conf_main_pipeline
 
-db = an_glbl.exp_db # alias
+an_glbl.exp_db = db  # alias
 
+s = conf_main_pipeline(db, an_glbl['tiff_base'],
+                       calibration_md_folder=an_glbl['config_base'],
+                       write_to_disk=True,
+                       vis=True,
+                       verbose=True)
 
-# patch to separate xpdan and xpdacq
-class AnMD:
-    pass
-try:
-    f = open(os.path.join(an_glbl.yaml_dir,
-                          'bt_bt.yml'))
-    an_dict = yaml.load(f)
-    an = AnMD()
-    an.md = an_dict
-except:
-    pass
+d.subscribe(istar(s.emit))
+
+d.start()
