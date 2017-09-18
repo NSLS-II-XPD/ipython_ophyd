@@ -17,7 +17,9 @@ s = conf_main_pipeline(db, an_glbl['tiff_base'],
                        calibration_md_folder=an_glbl['config_base'],
                        write_to_disk=True,
                        vis=True,
-                       verbose=False, pdf_kwargs={'Qmax':25})
+                       verbose=False,
+                       #pdf_config={'qmax':25}
+                       )
 
 d.subscribe(istar(s.emit))
 
