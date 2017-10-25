@@ -1,5 +1,4 @@
 import os
-from shed.event_streams import istar
 
 # expected code
 # 0 -> beamline
@@ -9,7 +8,6 @@ os.environ['XPDAN_SETUP'] = str(0)
 
 # setup glbl
 from xpdan.glbl import an_glbl
-from xpdan.pipelines.main import conf_main_pipeline
 from xpdan.pipelines.callback import MainCallback
 
 an_glbl.exp_db = db  # alias
