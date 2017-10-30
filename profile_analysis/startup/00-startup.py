@@ -2,7 +2,7 @@
 from databroker import Broker
 import copy
 db = Broker.named('xpd')
-db.prepare_hook = lambda x, y: copy.deepcoy(y)
+db.prepare_hook = lambda x, y: copy.deepcopy(y)
 
 import subprocess
 
