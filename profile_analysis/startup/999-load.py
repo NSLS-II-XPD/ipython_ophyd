@@ -10,7 +10,7 @@ os.environ['XPDAN_SETUP'] = str(0)
 from xpdan.glbl import an_glbl
 from xpdan.pipelines.callback import MainCallback
 
-an_glbl.exp_db = db  # alias
+an_glbl['exp_db'] = db  # alias
 
 s = MainCallback(db, an_glbl['tiff_base'],
                  calibration_md_folder=an_glbl['config_base'],
