@@ -88,3 +88,7 @@ profile_analysis/history.sqlite
 profile_collection/db/
 profile_collection/static
 profile_collection/history.sqlite
+profile_cj-dev/
+profile_collection/acceptance_tests/307_demo.csv
+profile_collection/acceptance_tests/mydata.xlsx
+
